@@ -7,13 +7,13 @@
 void prompt() { printf("prompt >"); }
 
 void runningfile(char command[]) {
-  sleep(5);
+  // sleep(5);
   char direc[1024];
   getcwd(direc, sizeof(direc));
   strcat(direc, "/");
   strcat(direc, command);
   // printf("Command for file %s\n", direc);
-  //int pid = fork();
+  // int pid = fork();
   /*if (pid != 0) {
     wait(NULL);
   }*/
@@ -30,7 +30,7 @@ int main() {
     fgets(inp, 128, stdin);
     char command[128], args[128];
     command_count = sscanf(inp, "%s %s", command, args);
-    //printf("%s %s\n", command, args);
+    // printf("%s %s\n", command, args);
     if (strcmp(command, "pwd") == 0) {
       // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -49,15 +49,13 @@ int main() {
     else if (strcmp(command, "quit") == 0) {
       break;
     } else {
-      int pid=fork();
-      if(pid==0){
+      int pid = fork();
+      if (pid == 0) {
         runningfile(command);
         break;
+      } else {
+        wait(NULL);
       }
-      else{
-        wait();
-      }
-    
     }
 
     /*else {
