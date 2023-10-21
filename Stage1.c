@@ -1,9 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
+#define _XOPEN_SOURCE 600
+
 void prompt() { printf("prompt >"); }
+
+void runningfile(char command[]) {
+  char direc[1024];
+  getcwd(direc, sizeof(direc));
+  strcat(direc, "\\");
+  strcat(direc, command);
+  // printf("Command for file %s\n", direc);
+  int pid = fork();
+  /*if (pid != 0) {
+    wait();
+  }*/
+  system(direc);
+  printf("\n");
+}
 
 int main() {
   while (1) {
@@ -32,13 +49,7 @@ int main() {
     else if (strcmp(command, "quit") == 0) {
       break;
     } else {
-      char direc[1024];
-      getcwd(direc, sizeof(direc));
-      strcat(direc, "\\");
-      strcat(direc, command);
-      // printf("Command for file %s\n", direc);
-      system(direc);
-      printf("\n");
+      runningfile(command);
     }
 
     /*else {
