@@ -52,7 +52,7 @@ int main() {
         runningfile(command);
       }
       else{
-        wait(NULL);
+        wait();
       }
     
     }
