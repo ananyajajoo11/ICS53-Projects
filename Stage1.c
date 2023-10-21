@@ -7,6 +7,7 @@
 void prompt() { printf("prompt >"); }
 
 void runningfile(char command[]) {
+  sleep(5);
   char direc[1024];
   getcwd(direc, sizeof(direc));
   strcat(direc, "/");
