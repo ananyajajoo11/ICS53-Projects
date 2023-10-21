@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
+
 
 void prompt() { printf("prompt >"); }
 
 void runningfile(char command[]) {
   // sleep(5);
+  int pid=fork();
+  if(pid==0){
   char direc[1024];
   getcwd(direc, sizeof(direc));
   strcat(direc, "/");
@@ -19,6 +21,11 @@ void runningfile(char command[]) {
   }*/
   system(direc);
   printf("\n");
+  exit();
+  }
+  else{
+    wait(NULL);
+  }
 }
 
 int main() {
@@ -49,13 +56,15 @@ int main() {
     else if (strcmp(command, "quit") == 0) {
       break;
     } else {
-      int pid = fork();
+      runningfile(command);
+      /*int pid = fork();
       if (pid == 0) {
         runningfile(command);
         break;
       } else {
         wait(NULL);
-      }
+        exit()
+      }*/
     }
 
     /*else {
