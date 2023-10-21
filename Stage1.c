@@ -31,10 +31,18 @@ int main() {
 
     else if (strcmp(command, "quit") == 0) {
       break;
+    } else {
+      char direc[1024];
+      getcwd(direc, sizeof(direc));
+      strcat(direc, "\\");
+      strcat(direc, command);
+      // printf("Command for file %s\n", direc);
+      system(direc);
+      printf("\n");
     }
 
-    else {
+    /*else {
       printf("Unknown command\n");
-    }
+    }*/
   }
 }
