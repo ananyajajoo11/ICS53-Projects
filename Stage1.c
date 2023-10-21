@@ -23,13 +23,13 @@ int main() {
       }
     }
 
-    if (strcmp(command, "cd") == 0) {
+    else if (strcmp(command, "cd") == 0) {
       if (chdir(args) != 0) {
         perror("getcwd");
       }
     }
 
-    if (strcmp(command, "quit") == 0) {
+    else if (strcmp(command, "quit") == 0) {
       break;
     }
 
