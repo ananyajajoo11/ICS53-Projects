@@ -4,8 +4,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#define _XOPEN_SOURCE 600
-
 void prompt() { printf("prompt >"); }
 
 void runningfile(char command[]) {
@@ -14,7 +12,7 @@ void runningfile(char command[]) {
   strcat(direc, "\\");
   strcat(direc, command);
   // printf("Command for file %s\n", direc);
-  int pid = fork();
+  // int pid = fork();
   /*if (pid != 0) {
     wait();
   }*/
