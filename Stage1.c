@@ -9,12 +9,12 @@ void prompt() { printf("prompt >"); }
 void runningfile(char command[]) {
   char direc[1024];
   getcwd(direc, sizeof(direc));
-  strcat(direc, "\\");
+  strcat(direc, "/");
   strcat(direc, command);
   // printf("Command for file %s\n", direc);
-  // int pid = fork();
+  //int pid = fork();
   /*if (pid != 0) {
-    wait();
+    wait(NULL);
   }*/
   system(direc);
   printf("\n");
@@ -47,7 +47,14 @@ int main() {
     else if (strcmp(command, "quit") == 0) {
       break;
     } else {
-      runningfile(command);
+      int pid=fork();
+      if(pid==0){
+        runningfile(command);
+      }
+      else{
+        wait(NULL);
+      }
+    
     }
 
     /*else {
