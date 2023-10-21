@@ -34,7 +34,7 @@ int main() {
     }
 
     else {
-      printf("Unknown command");
+      printf("Unknown command\n");
     }
   }
 }
