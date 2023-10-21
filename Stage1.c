@@ -2,14 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <ctype.h>
+#include <fcntl.h>
 
 void prompt() { printf("prompt >"); }
+void handler(int sig){
+  printf("Checking brooo");
+  exit(0);
+}
 
 void runningfile(char command[]) {
-  // sleep(5);
+  sleep(5);
   int pid=fork();
   if(pid==0){
+  signal(SIGINT,handler);
+  kill(getpid(),SIGINT);
   char direc[1024];
   getcwd(direc, sizeof(direc));
   strcat(direc, "/");
