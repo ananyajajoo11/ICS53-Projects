@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,23 +6,31 @@
 
 void prompt() { printf("prompt >"); }
 
+void quitProg() {
+  // int pid = getpid();
+  // printf("%d\n", pid);
+  //  printf("Coming here");
+  /*if (pid == 0) {
+    printf("Trying to exit child process");
+    exit(0);
+    // kill(pid, SIGINT);
+  }*/
+  // exit(0);
+}
+
 void runningfile(char command[]) {
-  // sleep(5);
   int pid = fork();
   if (pid == 0) {
+    sleep(3);
     char direc[1024];
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
     strcat(direc, command);
-    // printf("Command for file %s\n", direc);
-    // int pid = fork();
-    /*if (pid != 0) {
-      wait(NULL);
-    }*/
     system(direc);
     printf("\n");
     exit(0);
   } else {
+    signal(SIGINT, quitProg);
     wait(NULL);
   }
 }
