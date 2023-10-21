@@ -42,7 +42,7 @@ int main() {
     int command_count;
     prompt();
     fgets(inp, 128, stdin);
-    char command[128], args[128];
+    char command[128]="", args[128]="";
     command_count = sscanf(inp, "%s %s", command, args);
     // printf("%s %s\n", command, args);
     if (strcmp(command, "pwd") == 0) {
@@ -62,7 +62,11 @@ int main() {
 
     else if (strcmp(command, "quit") == 0) {
       break;
-    } else {
+    } 
+    else if(strcmp(command,"")==0){
+      printf("Empty Command\n");
+      }
+      else {
       runningfile(command);
       /*int pid = fork();
       if (pid == 0) {
