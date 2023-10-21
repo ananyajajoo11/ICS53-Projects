@@ -27,7 +27,7 @@ int main() {
     else if (strcmp(command, "cd") == 0) {
       if (chdir(args) != 0) {
         perror("getcwd");
-        printf("upstream");
+        // printf("upstream");
       }
     }
 
