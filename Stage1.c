@@ -4,7 +4,16 @@
 #include <string.h>
 #include <unistd.h>
 
-void prompt() { printf("prompt >"); }
+void prompt() { printf("\nprompt >"); }
+
+void sigchldHandler(int signo) {
+  int status;
+  pid_t child_pid;
+  while ((child_pid = waitpid(-1, &status, WNOHANG)) > 0) {
+    // Child process terminated, handle as needed
+    printf("Child process with PID %d has terminated\n", child_pid);
+  }
+}
 
 void quitProg() {
   // int pid = getpid();
@@ -18,7 +27,7 @@ void quitProg() {
   // exit(0);
 }
 
-void runningfile(char command[]) {
+void runninginforeground(char command[],char args[]) {
   int pid = fork();
   if (pid == 0) {
     sleep(3);
@@ -26,8 +35,12 @@ void runningfile(char command[]) {
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
     strcat(direc, command);
-    system(direc);
-    printf("\n");
+    //system(direc);
+    if(execv(direc,args)<0){
+      printf("Program not found");
+      exit(0);
+    }
+    //printf("\n");
     exit(0);
   } else {
     signal(SIGINT, quitProg);
@@ -35,7 +48,28 @@ void runningfile(char command[]) {
   }
 }
 
+void runninginbackground(char command[],char args[]){
+  int pid = fork();
+  if (pid == 0) {
+    sleep(25);
+    char direc[1024];
+    getcwd(direc, sizeof(direc));
+    strcat(direc, "/");
+    strcat(direc, command);
+    //system(direc);
+    char* const argv[]={direc,NULL};
+    if(execv(direc,argv)<0){
+      printf("Program not found");
+      exit(0);
+    }
+    //printf("\n");
+  } else {
+    printf("Running %s in the background with PID: %d\n", command, pid);
+  }
+
+}
 int main() {
+  signal(SIGCHLD, sigchldHandler);
   while (1) {
     char inp[1024];
     char cwd[1024];
@@ -48,7 +82,7 @@ int main() {
     if (strcmp(command, "pwd") == 0) {
       // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s\n", cwd);
+        printf("Current working dir: %s", cwd);
       } else {
         perror("getcwd() error");
       }
@@ -64,10 +98,17 @@ int main() {
       break;
     } 
     else if(strcmp(command,"")==0){
-      printf("Empty Command\n");
+      printf("Empty Command");
       }
       else {
-      runningfile(command);
+        if(strcmp(args,"")==0){
+
+        
+      runninginforeground(command,args);
+        }
+        else{
+          runninginbackground(command,args);
+        }
       /*int pid = fork();
       if (pid == 0) {
         runningfile(command);
