@@ -6,7 +6,7 @@
 
 int pid = -1;
 
-void prompt() { printf("\nprompt >"); }
+void prompt() { printf("prompt >"); }
 
 void sigchldHandler(int signo) {
   int status;
@@ -99,7 +99,7 @@ int main() {
     if (strcmp(command, "pwd") == 0) {
       // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s", cwd);
+        printf("Current working dir: %s\n", cwd);
       } else {
         perror("getcwd() error");
       }
