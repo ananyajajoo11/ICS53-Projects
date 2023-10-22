@@ -11,10 +11,10 @@ void prompt() { printf("\nprompt >"); }
 void sigchldHandler(int signo) {
   int status;
   pid_t child_pid;
-  /*while ((child_pid = waitpid(-1, &status, WNOHANG)) > 0) {
+  while ((child_pid = waitpid(-1, &status, WNOHANG)) > 0) {
     // Child process terminated, handle as needed
     printf("Child process with PID %d has terminated\n", child_pid);
-  }*/
+  }
 }
 
 void quitProg() {
@@ -68,6 +68,7 @@ void runninginforeground(char command[], char args[]) {
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
   if (pid == 0) {
+    signal(SIGINT, SIG_IGN);
     sleep(5);
     char direc[1024];
     getcwd(direc, sizeof(direc));
@@ -86,7 +87,6 @@ void runninginbackground(char command[], char args[]) {
 }
 int main() {
   signal(SIGCHLD, sigchldHandler);
-
   while (1) {
     char inp[1024];
     char cwd[1024];
