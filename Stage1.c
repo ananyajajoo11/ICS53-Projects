@@ -4,7 +4,20 @@
 #include <string.h>
 #include <unistd.h>
 
+#define FOREGROUND_RUNNING 1
+#define BACKGROUND_RUNNING 2
+#define STOPPED 3
+
+typedef struct {
+  int job_id;
+  pid_t pid;
+  // char command_line[256];  // Adjust the size as needed
+  int state;  // You can use constants to represent states
+} Job;
+
 int pid = -1;
+int job_id = 0;
+Job jobs[30];
 
 void prompt() { printf("prompt >"); }
 
@@ -15,6 +28,14 @@ void sigchldHandler(int signo) {
     // Child process terminated, handle as needed
     printf("Child process with PID %d has terminated\n", child_pid);
   }
+}
+
+Job create_job(pid_t pid, int state) {
+  Job new_job;
+  new_job.job_id = ++job_id;  // Assign a new job ID and increment last_job_id
+  new_job.pid = pid;
+  new_job.state = state;
+  return new_job;
 }
 
 void quitProg() {
@@ -43,6 +64,7 @@ void quitProg() {
 
 void runninginforeground(char command[], char args[]) {
   pid = fork();
+  create_job(pid, 3);
   // printf("%d\n", pid);
   if (pid == 0) {
     signal(SIGINT, SIG_DFL);
@@ -85,6 +107,28 @@ void runninginbackground(char command[], char args[]) {
     printf("Running %s in the background with PID: %d\n", command, pid);
   }
 }
+
+const char* get_status_string(int state) {
+  switch (state) {
+    case FOREGROUND_RUNNING:
+      return "Running";
+    case BACKGROUND_RUNNING:
+      return "Running";
+    case STOPPED:
+      return "Stopped";
+    default:
+      return "Unknown";
+  }
+}
+
+void print_job_list(Job job_list[]) {
+  for (int i = 0; i < 20; i++) {
+    printf("[%d] (%d) %s %s\n", job_list[i].job_id, job_list[i].pid,
+           get_status_string(job_list[i].state));
+  }
+}
+// Function to get the status string based on the state
+
 int main() {
   signal(SIGCHLD, sigchldHandler);
   while (1) {
@@ -109,6 +153,10 @@ int main() {
       if (chdir(args) != 0) {
         perror("getcwd");
       }
+    }
+
+    else if (strcmp(command, "jobs") == 0) {
+      print_job_list(jobs);
     }
 
     else if (strcmp(command, "quit") == 0) {
