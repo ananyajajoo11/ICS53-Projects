@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-void prompt() { printf("prompt >"); }
+void prompt() { printf("\nprompt >"); }
 
 void quitProg() {
   // int pid = getpid();
@@ -18,7 +18,7 @@ void quitProg() {
   // exit(0);
 }
 
-void runningfile(char command[]) {
+void runningfile(char command[],char args[]) {
   int pid = fork();
   if (pid == 0) {
     sleep(3);
@@ -26,8 +26,12 @@ void runningfile(char command[]) {
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
     strcat(direc, command);
-    system(direc);
-    printf("\n");
+    //system(direc);
+    if(execv(direc,args)<0){
+      printf("Program not found");
+      exit(0);
+    }
+    //printf("\n");
     exit(0);
   } else {
     signal(SIGINT, quitProg);
@@ -48,7 +52,7 @@ int main() {
     if (strcmp(command, "pwd") == 0) {
       // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s\n", cwd);
+        printf("Current working dir: %s", cwd);
       } else {
         perror("getcwd() error");
       }
@@ -64,10 +68,10 @@ int main() {
       break;
     } 
     else if(strcmp(command,"")==0){
-      printf("Empty Command\n");
+      printf("Empty Command");
       }
       else {
-      runningfile(command);
+      runningfile(command,args);
       /*int pid = fork();
       if (pid == 0) {
         runningfile(command);
