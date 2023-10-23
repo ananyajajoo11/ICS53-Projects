@@ -56,7 +56,7 @@ void stopForegroundJob() {
     kill(pid, SIGTSTP);
     jobs[noOfJobs] = create_job(pid, 3, command);
   // printf("job id %d", job_id);
-  noOfJobs += 1;
+    noOfJobs += 1;
     /*for (int i = 0; i < noOfJobs; i++) {
       if (jobs[i].pid == pid) {
         jobs[i].state = STOPPED;
@@ -106,7 +106,8 @@ void runninginbackground(char command[], char args[]) {
 
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
-    sleep(5);
+    signal(SIGTSTP,SIG_IGN);
+    //sleep(5);
     char direc[1024];
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
