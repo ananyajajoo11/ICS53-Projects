@@ -15,7 +15,7 @@ void sigchldHandler(int signo) {
   }
 }
 
-void quitProg() {
+void quitprog() {
   // int pid = getpid();
   // printf("%d\n", pid);
   //  printf("Coming here");
@@ -25,10 +25,16 @@ void quitProg() {
     // kill(pid, SIGINT);
   }*/
   // exit(0);
+  kill(getpid(),SIGINT);
 }
 
 void runninginforeground(char command[],char args[]) {
   int pid = fork();
+  if (pid == 0) {
+    // In the child process
+    signal(SIGINT, SIG_DFL); // Use the default SIGINT handling in the child processes
+    // Rest of the child process code
+}
   if (pid == 0) {
     sleep(3);
     char direc[1024];
@@ -37,19 +43,24 @@ void runninginforeground(char command[],char args[]) {
     strcat(direc, command);
     //system(direc);
     if(execv(direc,args)<0){
-      printf("Program not found");
-      exit(0);
+      perror("execv");
+      exit(1);
     }
     //printf("\n");
     exit(0);
   } else {
-    signal(SIGINT, quitProg);
+    signal(SIGINT, quitprog);
     wait(NULL);
   }
 }
 
 void runninginbackground(char command[],char args[]){
   int pid = fork();
+  /*if (pid == 0) {
+    // In the child process
+    signal(SIGINT, SIG_DFL); // Use the default SIGINT handling in the child processes
+    // Rest of the child process code
+}*/
   if (pid == 0) {
     sleep(25);
     char direc[1024];
@@ -59,8 +70,8 @@ void runninginbackground(char command[],char args[]){
     //system(direc);
     char* const argv[]={direc,NULL};
     if(execv(direc,argv)<0){
-      printf("Program not found");
-      exit(0);
+      perror("execv");
+      exit(1);
     }
     //printf("\n");
   } else {
@@ -70,6 +81,7 @@ void runninginbackground(char command[],char args[]){
 }
 int main() {
   signal(SIGCHLD, sigchldHandler);
+  signal (SIGINT,quitprog);
   while (1) {
     char inp[1024];
     char cwd[1024];
