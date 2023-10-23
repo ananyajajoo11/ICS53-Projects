@@ -61,7 +61,29 @@ void quitProg() {
     printf("Trying to exit child process\n");
     kill(getpid(), SIGINT);
   }
+}
 
+void stopForegroundJob() {
+  // printf("Reaching the handler");
+  /*if (kill(pid, SIGTSTP) == 0) {
+    printf("Killed this process");
+  };
+  for (int i = 0; i < noOfJobs; i++) {
+    if (jobs[i].pid == pid) {
+      jobs[i].state = STOPPED;
+      break;
+    }
+  }*/
+  printf("Detected with pid %d", pid);
+  if (pid != 0) {
+    kill(pid, SIGTSTP);
+    for (int i = 0; i < noOfJobs; i++) {
+      if (jobs[i].pid == pid) {
+        jobs[i].state = STOPPED;
+        break;
+      }
+    }
+  }
   // exit(0);
 }
 
@@ -74,7 +96,8 @@ void runninginforeground(char command[], char args[]) {
   // printf("%d\n", pid);
   if (pid == 0) {
     signal(SIGINT, SIG_DFL);
-    // signal(SIGINT, quitProg);
+    signal(SIGTSTP, stopForegroundJob);
+    //  signal(SIGINT, quitProg);
     sleep(3);
     char direc[1024];
     getcwd(direc, sizeof(direc));
@@ -85,11 +108,9 @@ void runninginforeground(char command[], char args[]) {
       printf("Program not found");
       exit(0);
     }
-
-    // printf("\n");
-    // exit(0);
   } else {
     signal(SIGINT, quitProg);
+    signal(SIGTSTP, stopForegroundJob);
     wait(NULL);
   }
 }
