@@ -18,6 +18,7 @@ typedef struct {
 int pid = -1;
 int job_id = 0;
 int noOfJobs = 0;
+char command[128] = "";
 Job jobs[30];
 
 void prompt() { printf("prompt >"); }
@@ -53,12 +54,15 @@ void stopForegroundJob() {
   printf("Detected with pid %d", pid);
   if (pid != 0) {
     kill(pid, SIGTSTP);
-    for (int i = 0; i < noOfJobs; i++) {
+    jobs[noOfJobs] = create_job(pid, 3, command);
+  // printf("job id %d", job_id);
+  noOfJobs += 1;
+    /*for (int i = 0; i < noOfJobs; i++) {
       if (jobs[i].pid == pid) {
         jobs[i].state = STOPPED;
         break;
       }
-    }
+    }*/
   }
   // exit(0);
 }
@@ -66,9 +70,9 @@ void stopForegroundJob() {
 void runninginforeground(char command[], char args[]) {
   pid = fork();
   // printf("pid = %d", pid);
-  jobs[noOfJobs] = create_job(pid, 1, command);
+  //jobs[noOfJobs] = create_job(pid, 1, command);
   // printf("job id %d", job_id);
-  noOfJobs += 1;
+  //noOfJobs += 1;
   // printf("%d\n", pid);
   if (pid == 0) {
     signal(SIGINT, SIG_DFL);
@@ -149,7 +153,7 @@ int main() {
     int command_count;
     prompt();
     fgets(inp, 128, stdin);
-    char command[128] = "", args[128] = "";
+    char args[128] = "";
     command_count = sscanf(inp, "%s %s", command, args);
     // printf("%s %s\n", command, args);
     if (strcmp(command, "pwd") == 0) {
