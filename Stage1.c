@@ -82,10 +82,12 @@ void runninginforeground(char command[], char args[]) {
     strcat(direc, command);
     // system(direc);
     if (execv(direc, args) < 0) {
+      if(execvp(command,args)<0){
       printf("Program not found");
       exit(0);
     }
-
+    }
+    
     // printf("\n");
     // exit(0);
   } else {
