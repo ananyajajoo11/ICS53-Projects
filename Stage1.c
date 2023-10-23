@@ -109,7 +109,8 @@ void runninginforeground(char command[], char args[]) {
     } else {
       // Parent process
       // Wait for the child process to finish
-      signal(SIGINT, quitProg);
+      //signal(SIGINT, quitProg);
+      signal(SIGINT, SIG_IGN);
       int status;
       wait(&status);
 
@@ -146,7 +147,8 @@ void runninginbackground(char command[], char args[]) {
     }
 
     // printf("\n");
-  } else {
+  } else {   
+    signal(SIGCHLD, sigchldHandler);
     printf("Running %s in the background with PID: %d\n", command, pid);
   }
 }
@@ -173,7 +175,6 @@ void print_job_list(Job job_list[]) {
 // Function to get the status string based on the state
 
 int main() {
-  signal(SIGCHLD, sigchldHandler);
   while (1) {
     char inp[1024];
     char cwd[1024];
