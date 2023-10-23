@@ -51,28 +51,40 @@ void quitProg() {
 }
 
 void stopForegroundJob() {
-  printf("Detected with pid %d", pid);
-  if (pid != 0) {
-    kill(pid, SIGTSTP);
-    jobs[noOfJobs] = create_job(pid, 3, command);
+  // printf("Detected with pid %d", pid);
+  jobs[noOfJobs] = create_job(pid, 3, command);
   // printf("job id %d", job_id);
   noOfJobs += 1;
-    /*for (int i = 0; i < noOfJobs; i++) {
+  // kill(pid, SIGTSTP);
+  if (pid != 0) {
+    kill(pid, SIGTSTP);
+  } else {
+    // printf("I am the child process");
+    // fflush(stdout);
+    exit(0);
+  }
+
+  /*if (pid != 0) {
+    kill(pid, SIGTSTP);
+    jobs[noOfJobs] = create_job(pid, 3, command);
+    // printf("job id %d", job_id);
+    noOfJobs += 1;
+    for (int i = 0; i < noOfJobs; i++) {
       if (jobs[i].pid == pid) {
         jobs[i].state = STOPPED;
         break;
       }
-    }*/
-  }
+    }
+  }*/
   // exit(0);
 }
 
 void runninginforeground(char command[], char args[]) {
   pid = fork();
   // printf("pid = %d", pid);
-  //jobs[noOfJobs] = create_job(pid, 1, command);
+  // jobs[noOfJobs] = create_job(pid, 1, command);
   // printf("job id %d", job_id);
-  //noOfJobs += 1;
+  // noOfJobs += 1;
   // printf("%d\n", pid);
   if (pid == 0) {
     signal(SIGINT, SIG_DFL);
@@ -97,8 +109,8 @@ void runninginforeground(char command[], char args[]) {
 
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
-  char amper[1024]="";
-  strcat(amper,command);
+  char amper[1024] = "";
+  strcat(amper, command);
   strcat(amper, " &");
   jobs[noOfJobs] = create_job(pid, 2, amper);
   noOfJobs += 1;
