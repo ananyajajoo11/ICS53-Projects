@@ -11,8 +11,8 @@
 typedef struct {
   int job_id;
   pid_t pid;
-  // char command_line[256];  // Adjust the size as needed
-  int state;  // You can use constants to represent states
+  char command_line[256];  // Adjust the size as needed
+  int state;               // You can use constants to represent states
 } Job;
 
 int pid = -1;
@@ -31,11 +31,13 @@ void sigchldHandler(int signo) {
   }
 }
 
-Job create_job(int pid, int state) {
+Job create_job(int pid, int state, char command_line[]) {
   Job new_job;
   new_job.job_id = ++job_id;  // Assign a new job ID and increment last_job_id
   new_job.pid = pid;
   new_job.state = state;
+  // new_job.command_line = command_line;
+  strncpy(new_job.command_line, command_line, sizeof(new_job.command_line));
   return new_job;
 }
 
@@ -66,7 +68,7 @@ void quitProg() {
 void runninginforeground(char command[], char args[]) {
   pid = fork();
   // printf("pid = %d", pid);
-  jobs[noOfJobs] = create_job(pid, 1);
+  jobs[noOfJobs] = create_job(pid, 1, command);
   // printf("job id %d", job_id);
   noOfJobs += 1;
   // printf("%d\n", pid);
@@ -83,6 +85,7 @@ void runninginforeground(char command[], char args[]) {
       printf("Program not found");
       exit(0);
     }
+
     // printf("\n");
     // exit(0);
   } else {
@@ -93,8 +96,10 @@ void runninginforeground(char command[], char args[]) {
 
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
-  jobs[noOfJobs] = create_job(pid, 2);
+  jobs[noOfJobs] = create_job(pid, 2, command);
   noOfJobs += 1;
+  // strcat(command, "&");
+
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
     sleep(5);
@@ -108,6 +113,7 @@ void runninginbackground(char command[], char args[]) {
       printf("Program not found");
       exit(0);
     }
+
     // printf("\n");
   } else {
     printf("Running %s in the background with PID: %d\n", command, pid);
@@ -129,8 +135,8 @@ const char* get_status_string(int state) {
 
 void print_job_list(Job job_list[]) {
   for (int i = 0; i < noOfJobs; i++) {
-    printf("[%d] (%d) %s \n", job_list[i].job_id, job_list[i].pid,
-           get_status_string(job_list[i].state));
+    printf("[%d] (%d) %s %s \n", job_list[i].job_id, job_list[i].pid,
+           get_status_string(job_list[i].state), job_list[i].command_line);
   }
 }
 // Function to get the status string based on the state
