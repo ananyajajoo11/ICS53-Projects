@@ -93,7 +93,10 @@ void runninginforeground(char command[], char args[]) {
 
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
-  jobs[noOfJobs] = create_job(pid, 2, command);
+  char amper[1024]="";
+  strcat(amper,command);
+  strcat(amper, " &");
+  jobs[noOfJobs] = create_job(pid, 2, amper);
   noOfJobs += 1;
   // strcat(command, "&");
 
