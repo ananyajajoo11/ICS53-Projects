@@ -22,6 +22,11 @@ Job jobs[30];
 
 void prompt() { printf("prompt >"); }
 
+void removejob(){
+  noOfJobs--;
+  
+}
+
 void sigchldHandler(int signo) {
   int status;
   pid_t child_pid;
@@ -66,13 +71,39 @@ void quitProg() {
 }
 
 void runninginforeground(char command[], char args[]) {
+  //printf("Before checking%d", noOfJobs);
   pid = fork();
+  printf("pid = %d ", pid);
+  if (pid!=0){
+    wait(NULL);
+  }
+  else{
+    printf("123pid = %d ", pid);
+    jobs[noOfJobs] = create_job(pid, 1, command);
+    noOfJobs += 1;
+    signal(SIGINT, SIG_DFL);
+    sleep(3);
+    char direc[1024];
+    getcwd(direc, sizeof(direc));
+    strcat(direc, "/");
+    strcat(direc, command);
+    if (execv(direc, args) < 0) {
+      if(execvp(command,args)<0){
+      //removejob();
+      noOfJobs--;}
+  }
+  }
+  
   // printf("pid = %d", pid);
-  jobs[noOfJobs] = create_job(pid, 1, command);
+  /*jobs[noOfJobs] = create_job(pid, 1, command);
   // printf("job id %d", job_id);
   noOfJobs += 1;
   // printf("%d\n", pid);
   if (pid == 0) {
+    //jobs[noOfJobs] = create_job(pid, 1, command);
+    //noOfJobs += 1;
+    //sprintf("Before checking%d", noOfJobs);
+    printf("Just checking child process");
     signal(SIGINT, SIG_DFL);
     // signal(SIGINT, quitProg);
     sleep(3);
@@ -83,17 +114,17 @@ void runninginforeground(char command[], char args[]) {
     // system(direc);
     if (execv(direc, args) < 0) {
       if(execvp(command,args)<0){
+      //removejob();
+      noOfJobs--;
+      printf("after checking %d", noOfJobs);
       printf("Program not found");
       exit(0);
     }
     }
-    
-    // printf("\n");
-    // exit(0);
   } else {
     signal(SIGINT, quitProg);
     wait(NULL);
-  }
+  }*/
 }
 
 void runninginbackground(char command[], char args[]) {
@@ -114,9 +145,11 @@ void runninginbackground(char command[], char args[]) {
     strcat(direc, command);
     // system(direc);
     char* const argv[] = {direc, NULL};
-    if (execv(direc, argv) < 0) {
+    if (execv(direc, args) < 0) {
+      if(execvp(command,args)<0){
       printf("Program not found");
       exit(0);
+    }
     }
 
     // printf("\n");
@@ -139,6 +172,7 @@ const char* get_status_string(int state) {
 }
 
 void print_job_list(Job job_list[]) {
+  printf("while prijting %d", noOfJobs);
   for (int i = 0; i < noOfJobs; i++) {
     printf("[%d] (%d) %s %s \n", job_list[i].job_id, job_list[i].pid,
            get_status_string(job_list[i].state), job_list[i].command_line);
@@ -157,6 +191,8 @@ int main() {
     char command[128] = "", args[128] = "";
     command_count = sscanf(inp, "%s %s", command, args);
     // printf("%s %s\n", command, args);
+    printf("%s c - ",command);
+    printf("%s a - ",args);
     if (strcmp(command, "pwd") == 0) {
       // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -182,6 +218,7 @@ int main() {
       printf("Empty Command");
     } else {
       if (strcmp(args, "") == 0) {
+        //printf("Going to foreground");
         runninginforeground(command, args);
       } else {
         runninginbackground(command, args);
