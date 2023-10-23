@@ -115,6 +115,7 @@ void runninginforeground(char command[], char args[]) {
 
       // If the child process has finished successfully, add it to the job list
       if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        printf("Adding job");
         jobs[noOfJobs] = create_job(pid, 1, command);
         noOfJobs += 1;
       }
@@ -160,7 +161,7 @@ if (pid == 0) {
   }
 
   if (execSuccess) {
-    jobs[noOfJobs] = create_job(pid, 1, command);
+    jobs[noOfJobs] = create_job(pid, 1, command);q`1
     noOfJobs += 1;
   }
   printf("Executing the file");
