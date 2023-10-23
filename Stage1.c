@@ -122,59 +122,15 @@ void runninginforeground(char command[], char args[]) {
   } else {
     printf("File is not valid or executable.\n");
   }
-
-  /*pid = fork();
-int execSuccess = 0;
-int status;
-// printf("pid = %d", pid);
-// fflush(stdout);
-
-// printf("%d\n", pid);
-if (pid == 0) {
-  // printf("Child pid %d ", pid);
-  // fflush(stdout);
-  signal(SIGINT, SIG_DFL);
-  signal(SIGTSTP, stopForegroundJob);
-  //  signal(SIGINT, quitProg);
-  sleep(3);
-  char direc[1024];
-  getcwd(direc, sizeof(direc));
-  strcat(direc, "/");
-  strcat(direc, command);
-  // system(direc);
-  printf("now checking the file");
-  fflush(stdout);
-  if (execv(direc, args) == -1) {
-    perror("execv");
-    printf("Not Executing the file");
-    fflush(stdout);
-    exit(1);
-  }
-
-} else {
-  signal(SIGINT, quitProg);
-  signal(SIGTSTP, stopForegroundJob);
-  wait(&status);
-  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-    execSuccess = 1;  // Set the flag to 1 if execv succeeds
-  }
-
-  if (execSuccess) {
-    jobs[noOfJobs] = create_job(pid, 1, command);
-    noOfJobs += 1;
-  }
-  printf("Executing the file");
-  fflush(stdout);
-  // printf("%d", x);
-}*/
 }
 
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
-  jobs[noOfJobs] = create_job(pid, 2, command);
+  char amper[1024]="";
+  strcat(amper,command);
+  strcat(amper, " &");
+  jobs[noOfJobs] = create_job(pid, 2, amper);
   noOfJobs += 1;
-  // strcat(command, "&");
-
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
     sleep(5);
