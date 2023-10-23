@@ -1,7 +1,9 @@
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define FOREGROUND_RUNNING 1
@@ -15,7 +17,7 @@ typedef struct {
   int state;               // You can use constants to represent states
 } Job;
 
-int pid = -1;
+int pid;
 int job_id = 0;
 int noOfJobs = 0;
 Job jobs[30];
@@ -42,6 +44,7 @@ Job create_job(int pid, int state, char command_line[]) {
 }
 
 void quitProg() {
+  printf("Called by parent process");
   // int pid = getpid();
   // printf("%d\n", pid);
   //  printf("Coming here");
@@ -64,16 +67,6 @@ void quitProg() {
 }
 
 void stopForegroundJob() {
-  // printf("Reaching the handler");
-  /*if (kill(pid, SIGTSTP) == 0) {
-    printf("Killed this process");
-  };
-  for (int i = 0; i < noOfJobs; i++) {
-    if (jobs[i].pid == pid) {
-      jobs[i].state = STOPPED;
-      break;
-    }
-  }*/
   printf("Detected with pid %d", pid);
   if (pid != 0) {
     kill(pid, SIGTSTP);
@@ -87,32 +80,93 @@ void stopForegroundJob() {
   // exit(0);
 }
 
+bool isFileExecutable(const char* filename) {
+  struct stat fileInfo;
+  if (stat(filename, &fileInfo) != 0) {
+    return false;  // File doesn't exist
+  }
+  return (fileInfo.st_mode & S_IXUSR) != 0;  // Check if it's executable
+}
+
 void runninginforeground(char command[], char args[]) {
-  pid = fork();
-  // printf("pid = %d", pid);
-  jobs[noOfJobs] = create_job(pid, 1, command);
-  // printf("job id %d", job_id);
-  noOfJobs += 1;
-  // printf("%d\n", pid);
-  if (pid == 0) {
-    signal(SIGINT, SIG_DFL);
-    signal(SIGTSTP, stopForegroundJob);
-    //  signal(SIGINT, quitProg);
-    sleep(3);
-    char direc[1024];
-    getcwd(direc, sizeof(direc));
-    strcat(direc, "/");
-    strcat(direc, command);
-    // system(direc);
-    if (execv(direc, args) < 0) {
-      printf("Program not found");
-      exit(0);
+  if (isFileExecutable(command)) {
+    // File is executable, so proceed to execute it
+    pid = fork();
+    if (pid == 0) {
+      signal(SIGINT, SIG_DFL);
+      sleep(5);
+      // Child process
+      // Execute the file using execv
+      char direc[1024];
+      getcwd(direc, sizeof(direc));
+      strcat(direc, "/");
+      strcat(direc, command);
+
+      if (execv(direc, args) == -1) {
+        perror("execv");
+        exit(1);  // Handle the execution error
+      }
+    } else {
+      // Parent process
+      // Wait for the child process to finish
+      signal(SIGINT, quitProg);
+      int status;
+      wait(&status);
+
+      // If the child process has finished successfully, add it to the job list
+      if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        jobs[noOfJobs] = create_job(pid, 1, command);
+        noOfJobs += 1;
+      }
     }
   } else {
-    signal(SIGINT, quitProg);
-    signal(SIGTSTP, stopForegroundJob);
-    wait(NULL);
+    printf("File is not valid or executable.\n");
   }
+
+  /*pid = fork();
+int execSuccess = 0;
+int status;
+// printf("pid = %d", pid);
+// fflush(stdout);
+
+// printf("%d\n", pid);
+if (pid == 0) {
+  // printf("Child pid %d ", pid);
+  // fflush(stdout);
+  signal(SIGINT, SIG_DFL);
+  signal(SIGTSTP, stopForegroundJob);
+  //  signal(SIGINT, quitProg);
+  sleep(3);
+  char direc[1024];
+  getcwd(direc, sizeof(direc));
+  strcat(direc, "/");
+  strcat(direc, command);
+  // system(direc);
+  printf("now checking the file");
+  fflush(stdout);
+  if (execv(direc, args) == -1) {
+    perror("execv");
+    printf("Not Executing the file");
+    fflush(stdout);
+    exit(1);
+  }
+
+} else {
+  signal(SIGINT, quitProg);
+  signal(SIGTSTP, stopForegroundJob);
+  wait(&status);
+  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+    execSuccess = 1;  // Set the flag to 1 if execv succeeds
+  }
+
+  if (execSuccess) {
+    jobs[noOfJobs] = create_job(pid, 1, command);
+    noOfJobs += 1;
+  }
+  printf("Executing the file");
+  fflush(stdout);
+  // printf("%d", x);
+}*/
 }
 
 void runninginbackground(char command[], char args[]) {
