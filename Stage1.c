@@ -17,6 +17,7 @@ typedef struct {
 
 int pid = -1;
 int job_id = 0;
+int noOfJobs = 0;
 Job jobs[30];
 
 void prompt() { printf("prompt >"); }
@@ -30,7 +31,7 @@ void sigchldHandler(int signo) {
   }
 }
 
-Job create_job(pid_t pid, int state) {
+Job create_job(int pid, int state) {
   Job new_job;
   new_job.job_id = ++job_id;  // Assign a new job ID and increment last_job_id
   new_job.pid = pid;
@@ -64,7 +65,10 @@ void quitProg() {
 
 void runninginforeground(char command[], char args[]) {
   pid = fork();
-  create_job(pid, 3);
+  // printf("pid = %d", pid);
+  jobs[noOfJobs] = create_job(pid, 1);
+  // printf("job id %d", job_id);
+  noOfJobs += 1;
   // printf("%d\n", pid);
   if (pid == 0) {
     signal(SIGINT, SIG_DFL);
@@ -89,6 +93,8 @@ void runninginforeground(char command[], char args[]) {
 
 void runninginbackground(char command[], char args[]) {
   int pid = fork();
+  jobs[noOfJobs] = create_job(pid, 2);
+  noOfJobs += 1;
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
     sleep(5);
@@ -122,8 +128,8 @@ const char* get_status_string(int state) {
 }
 
 void print_job_list(Job job_list[]) {
-  for (int i = 0; i < 20; i++) {
-    printf("[%d] (%d) %s %s\n", job_list[i].job_id, job_list[i].pid,
+  for (int i = 0; i < noOfJobs; i++) {
+    printf("[%d] (%d) %s \n", job_list[i].job_id, job_list[i].pid,
            get_status_string(job_list[i].state));
   }
 }
