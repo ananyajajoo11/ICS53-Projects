@@ -14,6 +14,7 @@ typedef struct {
   pid_t pid;
   char command_line[256];  // Adjust the size as needed
   int state;               // You can use constants to represent states
+  bool active;
 } Job;
 
 int pid = -1;
@@ -21,6 +22,7 @@ int job_id = 0;
 int noOfJobs = 0;
 char command[128] = "";
 Job jobs[5];
+int next_available_job_id = 1;
 
 void prompt() { printf("prompt >"); }
 
@@ -31,12 +33,14 @@ void sigchldHandler(int signo) {
     // Child process terminated, handle as needed
     printf("Child process with PID %d has terminated\n", child_pid);
 
-    for (int i = 0; i < noOfJobs; i++) {
+    for (int i = 0; i < 5; i++) {
       if (jobs[i].pid == child_pid) {
+        jobs[i].active = false;
+        printf("%d ", jobs[i].pid);
         // Remove the job by shifting the remaining jobs
-        for (int j = i; j < noOfJobs - 1; j++) {
+        /*for (int j = i; j < noOfJobs - 1; j++) {
           jobs[j] = jobs[j + 1];
-        }
+        }*/
         noOfJobs--;
         printf("Removed job with PID %d from the Job structure\n", child_pid);
         break;
@@ -47,12 +51,43 @@ void sigchldHandler(int signo) {
 
 Job create_job(int pid, int state, char command_line[]) {
   Job new_job;
-  new_job.job_id = ++job_id;  // Assign a new job ID and increment last_job_id
+  new_job.job_id = 0;  // Assign a new job ID and increment last_job_id
   new_job.pid = pid;
   new_job.state = state;
   // new_job.command_line = command_line;
   strncpy(new_job.command_line, command_line, sizeof(new_job.command_line));
+  new_job.active = false;
   return new_job;
+}
+
+void add_job(Job new_job) {
+  printf("no of jobs %d ", noOfJobs);
+  if (noOfJobs < 5) {
+    int new_job_id = 1;
+
+    // Find the lowest available job ID
+    /*for (int i = 0; i < noOfJobs; i++) {
+      if (jobs[i].active && jobs[i].job_id == new_job_id) {
+        new_job_id++;
+        i = -1;  // Start over to ensure uniqueness
+      }
+    }*/
+    // Add the new job to the first available spot
+    for (int i = 0; i < 5; i++) {
+      printf("Active? %d \n ", jobs[i].active);
+      if (!jobs[i].active) {
+        new_job.job_id = i + 1;
+        jobs[i] = new_job;
+        jobs[i].active = true;
+        noOfJobs++;
+        return;
+      }
+    }
+  } else {
+    printf("Job list is full. Cannot add more jobs.\n");
+    return;
+    // exit(0);
+  }
 }
 
 void quitProg() {
@@ -92,8 +127,9 @@ void stopForegroundJob() {
   // For the parent process
   if (kill(pid, SIGTSTP) == 0) {
     // Successfully sent SIGTSTP to the child
-    jobs[noOfJobs] = create_job(pid, 3, command);
-    noOfJobs++;
+    // jobs[noOfJobs] = create_job(pid, 3, command);
+    // noOfJobs++;
+    add_job(create_job(pid, 3, command));
   } else {
     perror("kill");
   }
@@ -130,8 +166,8 @@ void runninginbackground(char command[], char args[]) {
   char amper[1024] = "";
   strcat(amper, command);
   strcat(amper, " &");
-  jobs[noOfJobs] = create_job(pid, 2, amper);
-  noOfJobs += 1;
+  add_job(create_job(pid, BACKGROUND_RUNNING, amper));
+  // noOfJobs += 1;
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
     sleep(5);
@@ -167,8 +203,10 @@ const char* get_status_string(int state) {
 
 void print_job_list(Job job_list[]) {
   for (int i = 0; i < noOfJobs; i++) {
-    printf("[%d] (%d) %s %s \n", job_list[i].job_id, job_list[i].pid,
-           get_status_string(job_list[i].state), job_list[i].command_line);
+    if (job_list[i].active) {
+      printf("[%d] (%d) %s %s \n", job_list[i].job_id, job_list[i].pid,
+             get_status_string(job_list[i].state), job_list[i].command_line);
+    }
   }
 }
 // Function to get the status string based on the state
@@ -290,6 +328,7 @@ void terminateJob(const char* arg) {
         if (jobs[i].job_id == job_ref) {
           pid = jobs[i].pid;
           if (kill(pid, SIGTERM) == 0) {
+            jobs[i].active = false;
             // Successfully sent SIGINT to the job
             printf("Terminated job %d\n", job_ref);
           } else {
@@ -309,6 +348,7 @@ void terminateJob(const char* arg) {
         if (kill(pid, SIGTERM) == 0) {
           // Successfully sent SIGINT to the job
           printf("Terminated job with PID %d\n", pid);
+          jobs[i].active = false;
         } else {
           perror("kill");
         }
