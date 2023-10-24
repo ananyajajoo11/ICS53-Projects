@@ -31,18 +31,19 @@ void sigchldHandler(int signo) {
   pid_t child_pid;
   while ((child_pid = waitpid(-1, &status, WNOHANG)) > 0) {
     // Child process terminated, handle as needed
-    printf("Child process with PID %d has terminated\n", child_pid);
+    // printf("Child process with PID %d has terminated\n", child_pid);
 
     for (int i = 0; i < 5; i++) {
       if (jobs[i].pid == child_pid) {
         jobs[i].active = false;
-        printf("%d ", jobs[i].pid);
-        // Remove the job by shifting the remaining jobs
+        // printf("%d ", jobs[i].pid);
+        //  Remove the job by shifting the remaining jobs
         /*for (int j = i; j < noOfJobs - 1; j++) {
           jobs[j] = jobs[j + 1];
         }*/
         noOfJobs--;
-        printf("Removed job with PID %d from the Job structure\n", child_pid);
+        // printf("Removed job with PID %d from the Job structure\n",
+        // child_pid);
         break;
       }
     }
@@ -61,20 +62,11 @@ Job create_job(int pid, int state, char command_line[]) {
 }
 
 void add_job(Job new_job) {
-  printf("no of jobs %d ", noOfJobs);
+  // printf("no of jobs %d ", noOfJobs);
   if (noOfJobs < 5) {
     int new_job_id = 1;
-
-    // Find the lowest available job ID
-    /*for (int i = 0; i < noOfJobs; i++) {
-      if (jobs[i].active && jobs[i].job_id == new_job_id) {
-        new_job_id++;
-        i = -1;  // Start over to ensure uniqueness
-      }
-    }*/
-    // Add the new job to the first available spot
     for (int i = 0; i < 5; i++) {
-      printf("Active? %d \n ", jobs[i].active);
+      // printf("Active? %d \n ", jobs[i].active);
       if (!jobs[i].active) {
         new_job.job_id = i + 1;
         jobs[i] = new_job;
@@ -115,6 +107,10 @@ void stopForegroundJob() {
 }
 
 void runninginforeground(char command[], char args[]) {
+  if (noOfJobs >= 5) {
+    printf("Job list is full. Cannot run the job.\n");
+    return;
+  }
   pid = fork();
   if (pid == 0) {
     // pid = getpid();
@@ -141,6 +137,10 @@ void runninginforeground(char command[], char args[]) {
 }
 
 void runninginbackground(char command[], char args[]) {
+  if (noOfJobs >= 5) {
+    printf("Job list is full. Cannot run the job.\n");
+    return;
+  }
   int pid = fork();
   char amper[1024] = "";
   strcat(amper, command);
@@ -188,9 +188,7 @@ void print_job_list(Job job_list[]) {
     }
   }
 }
-// Function to get the status string based on the state
 
-// Function to bring a job to the foreground
 void bring_to_foreground(char* arg) {
   if (arg[0] == '%') {
     int job_id;
@@ -217,7 +215,7 @@ void bring_to_foreground(char* arg) {
     if (sscanf(arg, "%d", &pid) == 1) {
       bool found = 0;
       int pid3 = atoi(arg);
-      printf("%d \n", pid3);
+      // printf("%d \n", pid3);
       fflush(stdout);
       kill(pid3, SIGCONT);
       for (int i = 0; i < noOfJobs; i++) {
@@ -243,15 +241,13 @@ void bring_to_background(const char* arg) {
 
   if (arg[0] == '%') {
     if (sscanf(arg, "%%%d", &job_ref) == 1) {
-      // Handle JID case
       for (int i = 0; i < noOfJobs; i++) {
         if (jobs[i].job_id == job_ref) {
           if (jobs[i].state == STOPPED) {
-            // If the job is in the STOPPED state, send a SIGCONT signal to
-            // resume it
             if (kill(jobs[i].pid, SIGCONT) == 0) {
               jobs[i].state = BACKGROUND_RUNNING;
-              printf("Resumed job %d to Background/Running state\n", job_ref);
+              // printf("Resumed job %d to Background/Running state\n",
+              // job_ref);
             } else {
               perror("kill");
             }
@@ -273,12 +269,10 @@ void bring_to_background(const char* arg) {
     for (int i = 0; i < noOfJobs; i++) {
       if (jobs[i].pid == pid) {
         if (jobs[i].state == STOPPED) {
-          // If the job is in the STOPPED state, send a SIGCONT signal to resume
-          // it
           if (kill(jobs[i].pid, SIGCONT) == 0) {
             jobs[i].state = BACKGROUND_RUNNING;
-            printf("Resumed job with PID %d to Background/Running state\n",
-                   pid);
+            // printf("Resumed job with PID %d to Background/Running state\n",
+            // pid);
           } else {
             perror("kill");
           }
@@ -309,7 +303,7 @@ void terminateJob(const char* arg) {
           if (kill(pid, SIGTERM) == 0) {
             jobs[i].active = false;
             // Successfully sent SIGINT to the job
-            printf("Terminated job %d\n", job_ref);
+            // printf("Terminated job %d\n", job_ref);
           } else {
             perror("kill");
           }
@@ -326,7 +320,7 @@ void terminateJob(const char* arg) {
       if (jobs[i].pid == pid) {
         if (kill(pid, SIGTERM) == 0) {
           // Successfully sent SIGINT to the job
-          printf("Terminated job with PID %d\n", pid);
+          // printf("Terminated job with PID %d\n", pid);
           jobs[i].active = false;
         } else {
           perror("kill");
@@ -390,3 +384,73 @@ int main() {
     }
   }
 }
+
+/* Stage 5 */
+
+/// IO REDIRECTION
+/*char buffer[1024];
+FILE* inputFile1 = stdin;
+if (strcmp(input_file,"")!=0){
+if (input_file) {
+        int input_fd = open(input_file, O_RDONLY,mode);
+        if (input_fd < 0) {
+            perror("Input redirection error");
+            exit(1);
+        }
+        dup2(input_fd, STDIN_FILENO);
+        close(input_fd);
+    }
+
+    while (fgets(buffer, sizeof(buffer), inputFile1) != NULL) {
+  // Process the read data
+  printf("Read: %s", buffer);
+  fflush(stdout);
+}
+}
+
+  if(strcmp(append_file,"")!=0){
+    if (append_file) {
+        int output_fd = open(append_file, O_WRONLY | O_CREAT | O_APPEND,
+mode); if(output_fd<0){ perror("Output redirection error"); exit(1);
+        }
+        dup2(output_fd, STDOUT_FILENO);
+        close(output_fd);
+    }
+
+  }
+
+  if(strcmp(output_file,"")!=0){
+    if (output_file) {
+        int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC,
+mode); if(output_fd<0){ perror("Output redirection error"); exit(1);
+        }
+        dup2(output_fd, STDOUT_FILENO);
+        close(output_fd);
+    }
+
+  }*/
+
+/*if(argscheck[0]=='>' && argscheck[1]=='>'){
+  printf("Coming within append file\n");
+  fflush(stdout);
+  int c = sscanf(argscheck, ">>%127s", append_file);
+  printf("Append File: %s\n", append_file);
+  fflush(stdout);
+
+}
+  else if (argscheck[0] == '>') {
+  printf("Coming within output file\n");
+  fflush(stdout);
+  int c = sscanf(argscheck, ">%127s", output_file);
+  printf("Output File: %s\n", output_file);
+  fflush(stdout);
+} else if (argscheck[0] == '<') {
+
+  printf("Coming within input file\n");
+  fflush(stdout);
+  int c = sscanf(argscheck, "<%127s", input_file);
+  printf("Input File: %s\n", input_file);
+  fflush(stdout);
+}*/
+
+/// IO REDIRECTION
