@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <ctype.h>
 
 #define FOREGROUND_RUNNING 1
 #define BACKGROUND_RUNNING 2
@@ -20,6 +25,9 @@ int job_id = 0;
 int noOfJobs = 0;
 char command[128] = "";
 Job jobs[30];
+
+
+mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
 
 void prompt() { printf("prompt >"); }
 
@@ -79,7 +87,7 @@ void stopForegroundJob() {
   // exit(0);
 }
 
-void runninginforeground(char command[], char args[]) {
+void runninginforeground(char command[], char args[], char* input_file, char* output_file, char* append_file) {
   pid = fork();
   // printf("pid = %d", pid);
   // jobs[noOfJobs] = create_job(pid, 1, command);
@@ -90,11 +98,99 @@ void runninginforeground(char command[], char args[]) {
     signal(SIGINT, SIG_DFL);
     signal(SIGTSTP, stopForegroundJob);
     //  signal(SIGINT, quitProg);
+
+
+
+    ///IO REDIRECTION 
+
+    /*char buffer[1024]; 
+    FILE* inputFile1 = stdin;
+
+
+  if (strcmp(input_file,"")!=0){
+    if (input_file) {
+            int input_fd = open(input_file, O_RDONLY,mode);
+            if (input_fd < 0) {
+                perror("Input redirection error");
+                exit(1);
+            }
+            dup2(input_fd, STDIN_FILENO);
+            close(input_fd);
+        }
+
+        while (fgets(buffer, sizeof(buffer), inputFile1) != NULL) {
+      // Process the read data
+      printf("Read: %s", buffer);
+      fflush(stdout);
+  }
+    }
+
+      if(strcmp(append_file,"")!=0){
+        if (append_file) {
+            int output_fd = open(append_file, O_WRONLY | O_CREAT | O_APPEND, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }
+
+      if(strcmp(output_file,"")!=0){
+        if (output_file) {
+            int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }
+
+
+        
+        /*int output_fd;
+        if (append_file) {
+            output_fd = open(append_file, O_WRONLY | O_CREAT | O_APPEND, mode);
+        } else if (output_file) {
+            output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, mode);
+        }
+
+        if (output_fd < 0) {
+            perror("Output redirection error");
+            exit(1);
+        }
+
+        dup2(output_fd, STDOUT_FILENO);
+        close(output_fd);*/
+
+      ///IO REDIRECTION
+    if(strcmp(output_file,"")!=0){
+
+    
+    if (output_file) {
+            int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, mode);
+            if (output_fd < 0) {
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+            return;
+        }
+    }
+    
     sleep(3);
     char direc[1024];
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
     strcat(direc, command);
+    //printf("%s",direc);
+    //fflush(stdout);
     // system(direc);
     if (execv(direc, args) < 0) {
       printf("Program not found");
@@ -107,7 +203,7 @@ void runninginforeground(char command[], char args[]) {
   }
 }
 
-void runninginbackground(char command[], char args[]) {
+void runninginbackground(char command[], char args[], char* input_file, char* output_file, char* append_file) {
   int pid = fork();
   char amper[1024] = "";
   strcat(amper, command);
@@ -118,6 +214,58 @@ void runninginbackground(char command[], char args[]) {
 
   if (pid == 0) {
     signal(SIGINT, SIG_IGN);
+
+
+    ///IO REDIRECTION
+    /*char buffer[1024]; 
+    FILE* inputFile1 = stdin;
+    if (strcmp(input_file,"")!=0){
+    if (input_file) {
+            int input_fd = open(input_file, O_RDONLY,mode);
+            if (input_fd < 0) {
+                perror("Input redirection error");
+                exit(1);
+            }
+            dup2(input_fd, STDIN_FILENO);
+            close(input_fd);
+        }
+
+        while (fgets(buffer, sizeof(buffer), inputFile1) != NULL) {
+      // Process the read data
+      printf("Read: %s", buffer);
+      fflush(stdout);
+  }
+    }
+
+      if(strcmp(append_file,"")!=0){
+        if (append_file) {
+            int output_fd = open(append_file, O_WRONLY | O_CREAT | O_APPEND, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }
+
+      if(strcmp(output_file,"")!=0){
+        if (output_file) {
+            int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }*/
+
+      ///IO REDIRECTION
+
+
     sleep(5);
     char direc[1024];
     getcwd(direc, sizeof(direc));
@@ -158,57 +306,174 @@ void print_job_list(Job job_list[]) {
 // Function to get the status string based on the state
 
 int main() {
+
   signal(SIGCHLD, sigchldHandler);
   while (1) {
-    char inp[1024];
+    /*char inp[1024];
     char cwd[1024];
     int command_count;
     prompt();
     fgets(inp, 128, stdin);
     char args[128] = "";
-    command_count = sscanf(inp, "%s %s", command, args);
+    command_count = sscanf(inp, "%s %s", command, args);*/
     // printf("%s %s\n", command, args);
+        char inp[1024];
+        char cwd[1024];
+        int command_count;
+        prompt();
+        fgets(inp, 128, stdin);
+        char args[128] = "";
+        char input_file[] = ""; 
+        char output_file[] = ""; 
+        char append_file[]="";
+
+        command_count = sscanf(inp, "%s %s", command, args);
+        printf("%s",args);
+        char argscheck[]="";
+        strcpy(argscheck,args);
+        printf("argcheck %s",argscheck);
+        fflush(stdout);
+    
+        /*if(argscheck[0]=='>' && argscheck[1]=='>'){
+        printf("Coming within append file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, ">>%127s", append_file); 
+        printf("Append File: %s\n", append_file);
+        fflush(stdout);
+
+    }
+        else if (argscheck[0] == '>') {
+        printf("Coming within output file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, ">%127s", output_file); 
+        printf("Output File: %s\n", output_file);
+        fflush(stdout);
+    } else if (argscheck[0] == '<') {
+
+        printf("Coming within input file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, "<%127s", input_file); 
+        printf("Input File: %s\n", input_file);
+        fflush(stdout);
+    }*/
+
     if (strcmp(command, "pwd") == 0) {
-      // char cwd[PATH_MAX];
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("Current working dir: %s\n", cwd);
       } else {
         perror("getcwd() error");
       }
     }
-
     else if (strcmp(command, "cd") == 0) {
       if (chdir(args) != 0) {
         perror("getcwd");
       }
     }
-
     else if (strcmp(command, "jobs") == 0) {
       print_job_list(jobs);
     }
-
     else if (strcmp(command, "quit") == 0) {
       break;
-    } else if (strcmp(command, "") == 0) {
-      printf("Empty Command");
-    } else {
-      if (strcmp(args, "") == 0) {
-        runninginforeground(command, args);
-      } else {
-        runninginbackground(command, args);
+    } 
+    else {
+      /*printf("eNTERING FPOREGONR IN MAIN");
+      printf("arg 0 is here see %c",args[0]);
+      fflush(stdout);*/
+      if(args[0]=='&'){
+
+        runninginbackground(command, args, "", output_file,"");
+
       }
-      /*int pid = fork();
-      if (pid == 0) {
-        runningfile(command);
-        break;
-      } else {
-        wait(NULL);
-        exit()
+      else{
+        //printf("eNTERING FPOREGONR IN MAIN");
+        runninginforeground(command, args, "", "joe.txt" ,"");
+
+      }
+      /*if (strcmp(args, "") == 0) {
+        printf("priting main %s",output_file);
+        fflush(stdout);
+        runninginforeground(command, args, "", &output_file ,"");
+      } else if (strcmp(args[0],'&')==0){
+        runninginbackground(command, args, "", &output_file,"");
       }*/
     }
-
-    /*else {
-      printf("Unknown command\n");
-    }*/
   }
 }
+
+
+
+///IO REDIRECTION
+    /*char buffer[1024]; 
+    FILE* inputFile1 = stdin;
+    if (strcmp(input_file,"")!=0){
+    if (input_file) {
+            int input_fd = open(input_file, O_RDONLY,mode);
+            if (input_fd < 0) {
+                perror("Input redirection error");
+                exit(1);
+            }
+            dup2(input_fd, STDIN_FILENO);
+            close(input_fd);
+        }
+
+        while (fgets(buffer, sizeof(buffer), inputFile1) != NULL) {
+      // Process the read data
+      printf("Read: %s", buffer);
+      fflush(stdout);
+  }
+    }
+
+      if(strcmp(append_file,"")!=0){
+        if (append_file) {
+            int output_fd = open(append_file, O_WRONLY | O_CREAT | O_APPEND, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }
+
+      if(strcmp(output_file,"")!=0){
+        if (output_file) {
+            int output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, mode);
+            if(output_fd<0){
+                perror("Output redirection error");
+                exit(1);
+            }
+            dup2(output_fd, STDOUT_FILENO);
+            close(output_fd);
+        }
+
+      }*/
+
+
+
+      /*if(argscheck[0]=='>' && argscheck[1]=='>'){
+        printf("Coming within append file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, ">>%127s", append_file); 
+        printf("Append File: %s\n", append_file);
+        fflush(stdout);
+
+    }
+        else if (argscheck[0] == '>') {
+        printf("Coming within output file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, ">%127s", output_file); 
+        printf("Output File: %s\n", output_file);
+        fflush(stdout);
+    } else if (argscheck[0] == '<') {
+
+        printf("Coming within input file\n");
+        fflush(stdout);
+        int c = sscanf(argscheck, "<%127s", input_file); 
+        printf("Input File: %s\n", input_file);
+        fflush(stdout);
+    }*/
+
+
+
+      ///IO REDIRECTION
