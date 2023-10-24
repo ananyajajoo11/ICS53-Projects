@@ -98,27 +98,6 @@ void quitProg() {
   }
 }
 
-/*void stopForegroundJob() {
-  if (pid == 0) {
-    // printf("Coming the the kill with pid %d ", pid);
-    // fflush(stdout);
-    pid_t my_pid = getpid();
-    printf("Coming to the kill with pid %d\n", my_pid);
-    fflush(stdout);
-    kill(pid, SIGTSTP);
-    jobs[noOfJobs] = create_job(my_pid, 3, command);
-    noOfJobs += 1;
-  } else {
-    printf("Coming the the exit with pid %d ", pid);
-    fflush(stdout);
-    // exit(0);
-  }
-  if (pid == 0) {
-    // Send SIGTSTP to the child process (foreground job)
-    kill(0, SIGTSTP);
-  }
-}*/
-
 void stopForegroundJob() {
   if (pid == 0) {
     return;  // Do nothing for the child process
@@ -142,7 +121,7 @@ void runninginforeground(char command[], char args[]) {
     signal(SIGINT, SIG_DFL);
     signal(SIGTSTP, SIG_DFL);
     //  signal(SIGINT, quitProg);
-    sleep(30);
+    sleep(5);
     char direc[1024];
     getcwd(direc, sizeof(direc));
     strcat(direc, "/");
@@ -202,7 +181,7 @@ const char* get_status_string(int state) {
 }
 
 void print_job_list(Job job_list[]) {
-  for (int i = 0; i < noOfJobs; i++) {
+  for (int i = 0; i < 5; i++) {
     if (job_list[i].active) {
       printf("[%d] (%d) %s %s \n", job_list[i].job_id, job_list[i].pid,
              get_status_string(job_list[i].state), job_list[i].command_line);
